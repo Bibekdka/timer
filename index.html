@@ -55,7 +55,7 @@
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-rose-100 via-pink-100 to-indigo-100 min-h-screen overflow-hidden">
+<body class="min-h-screen overflow-hidden">
     <div id="root"></div>
 
     <script type="text/babel">
@@ -104,8 +104,11 @@
             const [coupleName, setCoupleName] = useState('We');
             const [isEditing, setIsEditing] = useState(false);
             const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-            // New state for message box
-            const [showMessage, setShowMessage] = useState(false); 
+            
+            // New states for image functionality
+            const [backgroundImageUrl, setBackgroundImageUrl] = useState('');
+            const [isImageInputVisible, setIsImageInputVisible] = useState(false);
+            const [tempImageUrl, setTempImageUrl] = useState('');
 
             const calculateTimeLeft = () => {
                 const difference = +new Date(targetDate) - +new Date();
@@ -127,13 +130,16 @@
                 return () => clearInterval(timer);
             }, [targetDate]);
 
-            // Handler for the "Countdown to Forever" click
-            const handleImageClick = () => {
-                setShowMessage(true);
-                // Hide the message after 3 seconds
-                setTimeout(() => {
-                    setShowMessage(false);
-                }, 3000);
+            // Function to handle the footer click, opening the image URL input modal
+            const toggleImageInput = () => {
+                setIsImageInputVisible(!isImageInputVisible);
+                setTempImageUrl(backgroundImageUrl); // Pre-fill the input with the current URL
+            };
+
+            // Function to set the image URL
+            const handleSetImageUrl = () => {
+                setBackgroundImageUrl(tempImageUrl);
+                setIsImageInputVisible(false);
             };
 
             // Floating Background Hearts
@@ -148,7 +154,7 @@
                 })));
 
                 return (
-                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    <div className="absolute inset-0 overflow-hidden pointer-events-none z-10">
                         {hearts.map((heart) => (
                             <div
                                 key={heart.id}
@@ -186,14 +192,26 @@
             );
 
             return (
-                <div className="flex flex-col items-center justify-center min-h-screen relative p-4 z-0">
+                <div 
+                    className={`
+                        flex flex-col items-center justify-center min-h-screen relative p-4 z-0 transition-all duration-1000
+                        ${backgroundImageUrl ? 'bg-fixed bg-cover bg-center' : 'bg-gradient-to-br from-rose-100 via-pink-100 to-indigo-100'}
+                    `}
+                    style={backgroundImageUrl ? { backgroundImage: `url(${backgroundImageUrl})` } : {}}
+                >
+
+                    {/* Semi-transparent white overlay to ensure text readability when background image is set */}
+                    {backgroundImageUrl && (
+                         <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-0"></div>
+                    )}
+
                     <FloatingHearts />
 
                     {/* Decorative Background Blobs */}
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse pointer-events-none"></div>
-                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-pink-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-1000 pointer-events-none"></div>
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse pointer-events-none z-10"></div>
+                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-pink-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-1000 pointer-events-none z-10"></div>
 
-                    <div className="relative z-10 w-full max-w-4xl flex flex-col items-center text-center">
+                    <div className="relative z-20 w-full max-w-4xl flex flex-col items-center text-center">
 
                         {/* Header */}
                         <div className="mb-12 space-y-4">
@@ -256,11 +274,11 @@
                             <TimeUnit value={timeLeft.seconds} label="Seconds" />
                         </div>
 
-                        {/* Footer Message (Now Clickable) */}
+                        {/* Footer Message (Clickable to open image input) */}
                         <div 
                             className="bg-white/40 backdrop-blur-md px-8 py-4 rounded-full border border-white/60 shadow-lg transform transition-transform duration-300 cursor-pointer hover:scale-105 hover:shadow-xl"
-                            onClick={handleImageClick}
-                            title="Click to add a photo link"
+                            onClick={toggleImageInput}
+                            title="Click to set a background photo"
                         >
                             <div className="flex items-center gap-2 text-pink-800 font-medium">
                                 <Heart className="w-5 h-5 text-red-500 fill-current animate-pulse" />
@@ -269,22 +287,41 @@
                             </div>
                         </div>
                         
-                        {/* Temporary Message Box */}
-                        {showMessage && (
-                            <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-xl shadow-2xl transition-opacity duration-300 animate-fadeIn">
-                                Image Feature Clicked! (Future update will allow adding an image URL here.)
-                            </div>
+                        {/* Image Input Modal */}
+                        {isImageInputVisible && (
+                             <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
+                                <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-md">
+                                    <h2 className="text-xl font-semibold mb-4 text-pink-600 flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                                        Set Background Photo URL
+                                    </h2>
+                                    <p className="text-sm text-gray-600 mb-4">Paste a direct link to a high-resolution image (e.g., JPEG, PNG).</p>
+                                    <input
+                                        type="url"
+                                        value={tempImageUrl}
+                                        onChange={(e) => setTempImageUrl(e.target.value)}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 mb-4 text-gray-800"
+                                        placeholder="https://example.com/your-engagement-photo.jpg"
+                                    />
+                                    <div className="flex justify-end gap-3">
+                                        <button
+                                            onClick={() => setIsImageInputVisible(false)}
+                                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={handleSetImageUrl}
+                                            className="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors font-medium flex items-center gap-1"
+                                            disabled={!tempImageUrl}
+                                        >
+                                            <Check className="w-4 h-4" />
+                                            Set Image
+                                        </button>
+                                    </div>
+                                </div>
+                             </div>
                         )}
-                        
-                        <style jsx>{`
-                            @keyframes fadeIn {
-                                from { opacity: 0; transform: translateY(20px) translate-x(-50%); }
-                                to { opacity: 1; transform: translateY(0) translate-x(-50%); }
-                            }
-                            .animate-fadeIn {
-                                animation: fadeIn 0.3s ease-out;
-                            }
-                        `}</style>
 
                     </div>
                 </div>
