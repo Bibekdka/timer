@@ -98,6 +98,11 @@
             </svg>
         );
 
+        const Settings = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.78 1.25a2 2 0 0 0 .73 2.73l.08.15a2 2 0 0 1 0 2l-.08.15a2 2 0 0 0-.73 2.73l.78 1.25a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.78-1.25a2 2 0 0 0-.73-2.73l-.08-.15a2 2 0 0 1 0-2l.08-.15a2 2 0 0 0 .73-2.73l-.78-1.25a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        );
+
+
         function EngagementCountdown() {
             // Default target: Dec 10, 2025 at 10:00 AM
             const [targetDate, setTargetDate] = useState('2025-12-10T10:00');
@@ -105,10 +110,12 @@
             const [isEditing, setIsEditing] = useState(false);
             const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
             
-            // New states for image functionality
+            // State for Image and Redirection Link functionality
             const [backgroundImageUrl, setBackgroundImageUrl] = useState('');
-            const [isImageInputVisible, setIsImageInputVisible] = useState(false);
+            const [linkUrl, setLinkUrl] = useState('#'); // New: URL for the main footer link
+            const [isSettingsModalVisible, setIsSettingsModalVisible] = useState(false); // Renamed state
             const [tempImageUrl, setTempImageUrl] = useState('');
+            const [tempLinkUrl, setTempLinkUrl] = useState(''); // New: Temp state for link URL input
 
             const calculateTimeLeft = () => {
                 const difference = +new Date(targetDate) - +new Date();
@@ -130,16 +137,20 @@
                 return () => clearInterval(timer);
             }, [targetDate]);
 
-            // Function to handle the footer click, opening the image URL input modal
-            const toggleImageInput = () => {
-                setIsImageInputVisible(!isImageInputVisible);
-                setTempImageUrl(backgroundImageUrl); // Pre-fill the input with the current URL
+            // Function to handle opening the settings modal
+            const toggleSettingsModal = () => {
+                setIsSettingsModalVisible(!isSettingsModalVisible);
+                // Pre-fill inputs with current saved values
+                setTempImageUrl(backgroundImageUrl); 
+                setTempLinkUrl(linkUrl === '#' ? '' : linkUrl); // Don't show '#' if no link is set
             };
 
-            // Function to set the image URL
-            const handleSetImageUrl = () => {
+            // Function to save the new settings
+            const handleSaveSettings = () => {
                 setBackgroundImageUrl(tempImageUrl);
-                setIsImageInputVisible(false);
+                // If tempLinkUrl is empty, default to '#' to prevent breaking navigation
+                setLinkUrl(tempLinkUrl || '#'); 
+                setIsSettingsModalVisible(false);
             };
 
             // Floating Background Hearts
@@ -251,16 +262,27 @@
                                     </h1>
                                 )}
                             </div>
-
-                            <div className="flex items-center justify-center gap-2 text-gray-600 mt-2 bg-white/30 inline-block px-4 py-1 rounded-full backdrop-blur-sm">
-                                <Calendar className="w-4 h-4" />
-                                <input
-                                    type="datetime-local"
-                                    value={targetDate}
-                                    onChange={(e) => setTargetDate(e.target.value)}
-                                    className="bg-transparent border-none text-gray-700 focus:outline-none text-sm sm:text-lg text-center w-auto cursor-pointer font-medium"
-                                />
+                            
+                            {/* Date/Time and new Settings Button */}
+                            <div className="flex items-center justify-center gap-3">
+                                <div className="flex items-center justify-center gap-2 text-gray-600 bg-white/30 inline-block px-4 py-1 rounded-full backdrop-blur-sm">
+                                    <Calendar className="w-4 h-4" />
+                                    <input
+                                        type="datetime-local"
+                                        value={targetDate}
+                                        onChange={(e) => setTargetDate(e.target.value)}
+                                        className="bg-transparent border-none text-gray-700 focus:outline-none text-sm sm:text-lg text-center w-auto cursor-pointer font-medium"
+                                    />
+                                </div>
+                                <button 
+                                    onClick={toggleSettingsModal}
+                                    className="p-2 bg-pink-500/80 hover:bg-pink-600/90 text-white rounded-full shadow-lg transition-colors"
+                                    title="Open Link and Background Settings"
+                                >
+                                    <Settings className="w-5 h-5" />
+                                </button>
                             </div>
+
                         </div>
 
                         {/* Timer Grid */}
@@ -274,49 +296,77 @@
                             <TimeUnit value={timeLeft.seconds} label="Seconds" />
                         </div>
 
-                        {/* Footer Message (Clickable to open image input) */}
-                        <div 
-                            className="bg-white/40 backdrop-blur-md px-8 py-4 rounded-full border border-white/60 shadow-lg transform transition-transform duration-300 cursor-pointer hover:scale-105 hover:shadow-xl"
-                            onClick={toggleImageInput}
-                            title="Click to set a background photo"
+                        {/* Footer Link (Now an anchor tag for redirection) */}
+                        <a 
+                            href={linkUrl}
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className={`
+                                bg-white/40 backdrop-blur-md px-8 py-4 rounded-full border border-white/60 shadow-lg transform transition-transform duration-300 
+                                font-medium inline-flex items-center gap-2 text-pink-800 cursor-pointer
+                                ${linkUrl !== '#' && 'hover:scale-105 hover:shadow-xl'}
+                            `}
+                            title={linkUrl !== '#' ? `Click to go to ${linkUrl}` : "Set a link in the Settings menu (gear icon)."}
                         >
-                            <div className="flex items-center gap-2 text-pink-800 font-medium">
-                                <Heart className="w-5 h-5 text-red-500 fill-current animate-pulse" />
-                                <span>Countdown to Forever</span>
-                                <Heart className="w-5 h-5 text-red-500 fill-current animate-pulse" />
-                            </div>
-                        </div>
+                            <Heart className="w-5 h-5 text-red-500 fill-current animate-pulse" />
+                            <span>Countdown to Forever</span>
+                            <Heart className="w-5 h-5 text-red-500 fill-current animate-pulse" />
+                        </a>
                         
-                        {/* Image Input Modal */}
-                        {isImageInputVisible && (
+                        {/* Settings Modal (Handles both Link URL and Background Image URL) */}
+                        {isSettingsModalVisible && (
                              <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
-                                <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-md">
-                                    <h2 className="text-xl font-semibold mb-4 text-pink-600 flex items-center gap-2">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-                                        Set Background Photo URL
+                                <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-md space-y-6">
+                                    <h2 className="text-2xl font-bold text-pink-600 flex items-center gap-2 border-b pb-2">
+                                        <Settings className="w-6 h-6" />
+                                        Customize Countdown
                                     </h2>
-                                    <p className="text-sm text-gray-600 mb-4">Paste a direct link to a high-resolution image (e.g., JPEG, PNG).</p>
-                                    <input
-                                        type="url"
-                                        value={tempImageUrl}
-                                        onChange={(e) => setTempImageUrl(e.target.value)}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 mb-4 text-gray-800"
-                                        placeholder="https://example.com/your-engagement-photo.jpg"
-                                    />
-                                    <div className="flex justify-end gap-3">
+
+                                    {/* Link URL Setting */}
+                                    <section>
+                                        <h3 className="text-lg font-semibold mb-2 text-gray-700 flex items-center gap-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                                            Redirection Link
+                                        </h3>
+                                        <p className="text-sm text-gray-600 mb-2">Where should "Countdown to Forever" link go? (e.g., your wedding website, registry, etc.)</p>
+                                        <input
+                                            type="url"
+                                            value={tempLinkUrl}
+                                            onChange={(e) => setTempLinkUrl(e.target.value)}
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-800"
+                                            placeholder="https://your-wedding-website.com"
+                                        />
+                                    </section>
+
+                                    {/* Background Image Setting */}
+                                    <section>
+                                        <h3 className="text-lg font-semibold mb-2 text-gray-700 flex items-center gap-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                                            Background Photo URL
+                                        </h3>
+                                        <p className="text-sm text-gray-600 mb-2">Paste a direct link to your photo (JPEG/PNG).</p>
+                                        <input
+                                            type="url"
+                                            value={tempImageUrl}
+                                            onChange={(e) => setTempImageUrl(e.target.value)}
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-800"
+                                            placeholder="https://example.com/your-engagement-photo.jpg"
+                                        />
+                                    </section>
+
+                                    <div className="flex justify-end gap-3 pt-4 border-t">
                                         <button
-                                            onClick={() => setIsImageInputVisible(false)}
+                                            onClick={() => setIsSettingsModalVisible(false)}
                                             className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
                                         >
                                             Cancel
                                         </button>
                                         <button
-                                            onClick={handleSetImageUrl}
+                                            onClick={handleSaveSettings}
                                             className="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors font-medium flex items-center gap-1"
-                                            disabled={!tempImageUrl}
                                         >
                                             <Check className="w-4 h-4" />
-                                            Set Image
+                                            Save Settings
                                         </button>
                                     </div>
                                 </div>
