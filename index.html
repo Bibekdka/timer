@@ -1,18 +1,11 @@
-Skip to content
-Chat history
-
-
-
-
-You said:
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Our Engagement Countdown</title>
   <meta name="description" content="Countdown to our engagement day" />
-  <!-- Tailwind CDN (convenient for static hosting; for production consider generating a custom build) -->
+
   <script src="https://cdn.tailwindcss.com"></script>
 
   <style>
@@ -20,690 +13,363 @@ You said:
 
     body {
       font-family: 'Montserrat', sans-serif;
+      background: linear-gradient(135deg, #ffe7f0 0%, #ffdfe8 40%, #e6e6ff 100%);
     }
-    .script-font { font-family: 'Dancing Script', cursive; }
 
-    /* float hearts */
+    .script-font {
+      font-family: 'Dancing Script', cursive;
+    }
+
     @keyframes floatUp {
-      0% { transform: translateY(0) rotate(0deg); opacity: 0; }
-      10% { opacity: 0.6; }
-      100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
+      0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 0;
+      }
+      10% {
+        opacity: 0.6;
+      }
+      100% {
+        transform: translateY(-110vh) rotate(360deg);
+        opacity: 0;
+      }
     }
 
-    /* slow spin */
     @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
+      from {
+        transform: rotate(0);
+      }
+      to {
+        transform: rotate(360deg);
+      }
     }
 
-    .animate-spin-slow { animation: spin 4s linear infinite; }
-    .heart-bg { animation-name: floatUp; animation-timing-function: linear; animation-iteration-count: infinite; }
-
-    /* subtle gradient background fallback */
-    .page-bg {
-      background: linear-gradient(135deg, #ffe7f0 0%, #ffdfe8 40%, #e6e6ff 100%);
+    .animate-spin-slow {
+      animation: spin 4s linear infinite;
     }
 
-    /* small visual tweaks */
-    .time-card { min-width: 5rem; }
+    .heart-bg {
+      animation-name: floatUp;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+    }
+
+    .time-card {
+      min-width: 5rem;
+    }
+
+    .sparkle {
+      position: absolute;
+      will-change: transform, opacity;
+    }
   </style>
 </head>
-<body class="min-h-screen overflow-hidden page-bg">
+
+<body class="min-h-screen overflow-hidden">
   <div id="app" class="min-h-screen flex items-center justify-center p-4"></div>
 
   <script>
-  (function () {
-    // --- CONFIG ---
-    // Replace this with your real uploaded image path or full URL when deploying.
-    const UPLOADED_IMAGE_URL = 'uploaded-1x.jpg'; // <-- change if necessary
-    const TARGET = { year: 2025, monthIndex: 11, day: 10, hour: 16, minute: 0 }; // Dec 10, 2025 16:00 local time
+    (() => {
+      const UPLOADED_IMAGE_URL = "uploaded-1x.jpg";
 
-    // helper to format number with leading zero
-    function pad(n){ return n < 10 ? '0' + n : String(n); }
+      const TARGET = {
+        year: 2025,
+        monthIndex: 11,
+        day: 10,
+        hour: 16,
+        minute: 0,
+      };
 
-    // build target Date in local timezone (monthIndex: 0-11)
-    function getTargetDate() {
-      return new Date(TARGET.year, TARGET.monthIndex, TARGET.day, TARGET.hour, TARGET.minute, 0);
-    }
+      function timeLeftParts(target) {
+        var diff = target - new Date();
+        if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0 };
 
-    // calculate remaining time
-    function timeLeftParts(target) {
-      var diff = target - new Date();
-      if (diff <= 0) return { days:0, hours:0, minutes:0, seconds:0 };
-      var s = Math.floor(diff / 1000);
-      var days = Math.floor(s / (3600*24));
-      s -= days * 3600*24;
-      var hours = Math.floor(s / 3600);
-      s -= hours * 3600;
-      var minutes = Math.floor(s / 60);
-      var seconds = s - minutes * 60;
-      return { days: days, hours: hours, minutes: minutes, seconds: seconds };
-    }
+        var s = Math.floor(diff / 1000);
+        var days = Math.floor(s / (3600 * 24));
+        s -= days * 3600 * 24;
 
-    // inline SVG icons as strings for easy injection
-    var ICONS = {
-      heart: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>',
-      sparkles: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 3v4"/><path d="M3 9h4"/></svg>',
-      edit2: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>',
-      calendar: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>',
-      pin: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21.7C17.3 17 22 13.5 22 10a7 7 0 1 0-14 0c0 3.5 4.7 7 10 11.7z"/><circle cx="12" cy="10" r="3"/></svg>',
-      check: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>'
-    };
+        var hours = Math.floor(s / 3600);
+        s -= hours * 3600;
 
-    // create root structure
-    var app = document.getElementById('app');
+        var minutes = Math.floor(s / 60);
+        var seconds = s - minutes * 60;
 
-    app.innerHTML = '\
-      <div class="relative z-0 w-full max-w-4xl flex flex-col items-center text-center p-6">\
-        <div id="floating-hearts" class="absolute inset-0 overflow-hidden pointer-events-none z-10"></div>\
-        <div class="absolute top-0 right-0 w-64 h-64 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse pointer-events-none z-10"></div>\
-        <div class="absolute bottom-0 left-0 w-64 h-64 bg-pink-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse pointer-events-none z-10"></div>\
-        \
-        <div class="mb-8 space-y-4">\
-          <div class="flex items-center justify-center gap-2 text-pink-600 mb-2">\
-            <span id="sparkles-left" class="w-5 h-5"></span>\
-            <span class="text-sm font-semibold tracking-[0.2em] uppercase">The Big Day Is Coming</span>\
-            <span id="sparkles-right" class="w-5 h-5"></span>\
-          </div>\
-          \
-          <div class="group relative inline-block">\
-            <div id="name-view" class=""></div>\
-            <div id="name-edit" class="hidden"></div>\
-          </div>\
-          \
-          <div class="flex items-center justify-center gap-3">\
-            <div class="flex items-center justify-center gap-2 text-pink-800 bg-white/40 inline-block px-6 py-2 rounded-full backdrop-blur-md shadow-sm border border-white/40 font-semibold tracking-wide">\
-              <span id="calendar-icon" class="w-4 h-4"></span>\
-              <span>December 10, 2025 • 4:00 PM</span>\
-            </div>\
-          </div>\
-        </div>\
-        \
-        <div id="timer-grid" class="flex flex-wrap justify-center items-center gap-2 sm:gap-4 mb-8"></div>\
-        \
-        <div class="bg-white/40 backdrop-blur-md p-4 rounded-xl shadow-lg mb-12 w-full max-w-sm border border-white/60">\
-          <h3 class="text-lg font-bold text-pink-800 flex items-center justify-center gap-2 mb-2">\
-            <span id="pin-icon" class="w-5 h-5"></span>Venue Details\
-          </h3>\
-          <p class="text-gray-700 font-medium text-lg">Green Hills Resort</p>\
-          <p class="text-sm text-gray-500 mt-1">Time: 4 PM - 6 PM</p>\
-        </div>\
-        \
-        <a id="footer-link" href="#" target="_blank" rel="noopener noreferrer" class="bg-white/40 backdrop-blur-md px-8 py-4 rounded-full border border-white/60 shadow-lg transform transition-transform duration-300 font-medium inline-flex items-center gap-4 text-pink-800 cursor-pointer hover:scale-105 hover:shadow-xl">\
-          <img id="avatar-left" src="" alt="Engagement Photo" class="w-8 h-8 rounded-full object-cover shadow-md border-2 border-pink-300" />\
-          <span>Countdown to Forever</span>\
-          <img id="avatar-right" src="" alt="Engagement Photo" class="w-8 h-8 rounded-full object-cover shadow-md border-2 border-pink-300" />\
-        </a>\
-      </div>';
-
-    // inject icons
-    document.getElementById('sparkles-left').innerHTML = ICONS.sparkles;
-    document.getElementById('sparkles-right').innerHTML = ICONS.sparkles;
-    document.getElementById('calendar-icon').innerHTML = ICONS.calendar;
-    document.getElementById('pin-icon').innerHTML = ICONS.pin;
-
-    // footer images & link
-    var footerLink = document.getElementById('footer-link');
-    var avatarLeft = document.getElementById('avatar-left');
-    var avatarRight = document.getElementById('avatar-right');
-
-    // set images with fallback on error
-    function setAvatar(imgEl) {
-      imgEl.src = UPLOADED_IMAGE_URL;
-      imgEl.addEventListener('error', function () {
-        imgEl.onerror = null;
-        imgEl.src = "https://placehold.co/32x32/ff69b4/ffffff?text=%E2%99%A5";
-      });
-    }
-    setAvatar(avatarLeft);
-    setAvatar(avatarRight);
-    // link opens the image (or placeholder)
-    footerLink.href = UPLOADED_IMAGE_URL;
-
-    // name edit/view
-    var nameView = document.getElementById('name-view');
-    var nameEdit = document.getElementById('name-edit');
-
-    function createNameView(name) {
-      // clickable title - open edit mode when clicked
-      nameView.innerHTML = '<h1 id="couple-title" class="script-font text-5xl sm:text-7xl md:text-8xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-600 to-purple-600 cursor-pointer hover:opacity-80 transition-opacity flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 py-2" title="Click to edit names">\
-        <span id="couple-names"></span>\
-        <span class="text-4xl sm:text-6xl text-pink-400 font-sans font-light">&amp;</span>\
-        <span>Engaged</span>\
-        <span id="edit-icon" class="hidden sm:block w-5 h-5 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity absolute -right-8 top-1/2 -translate-y-1/2"></span>\
-      </h1>';
-      document.getElementById('couple-names').textContent = name;
-      document.getElementById('edit-icon').innerHTML = ICONS.edit2;
-
-      document.getElementById('couple-title').addEventListener('click', function () {
-        enterEditMode();
-      });
-    }
-
-    function createNameEdit(name) {
-      nameEdit.innerHTML = '<div class="flex flex-col sm:flex-row items-center gap-2 bg-white/40 p-2 rounded-xl backdrop-blur-sm shadow-lg">\
-        <input id="name-input" type="text" class="px-4 py-2 rounded-lg bg-white/80 border border-pink-200 focus:outline-none focus:ring-2 focus:ring-pink-400 text-gray-800 text-center" placeholder="Enter Names (e.g. Rohan & Priya)"/>\
-        <button id="save-name" class="p-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors" aria-label="Save name">\
-          <span id="save-icon"></span>\
-        </button>\
-      </div>';
-      document.getElementById('name-input').value = name || '';
-      document.getElementById('save-icon').innerHTML = ICONS.check;
-      document.getElementById('save-name').addEventListener('click', function () {
-        var val = document.getElementById('name-input').value.trim() || 'We';
-        localStorage.setItem('engagement_couple_name', val);
-        exitEditMode(val);
-      });
-    }
-
-    function enterEditMode() {
-      nameView.classList.add('hidden');
-      nameEdit.classList.remove('hidden');
-      document.getElementById('name-input').focus();
-    }
-    function exitEditMode(name) {
-      nameEdit.classList.add('hidden');
-      nameView.classList.remove('hidden');
-      createNameView(name);
-    }
-
-    // initialize name (persisted)
-    var savedName = localStorage.getItem('engagement_couple_name') || 'We';
-    createNameEdit(savedName); // prepared but hidden
-    createNameView(savedName);
-
-    // TIMER
-    var timerGrid = document.getElementById('timer-grid');
-
-    function renderTimeParts(parts) {
-      timerGrid.innerHTML = (
-        renderUnit(parts.days, 'Days') +
-        '<div class="hidden sm:block text-4xl text-pink-300 font-light pb-8">:</div>' +
-        renderUnit(parts.hours, 'Hours') +
-        '<div class="hidden sm:block text-4xl text-pink-300 font-light pb-8">:</div>' +
-        renderUnit(parts.minutes, 'Minutes') +
-        '<div class="hidden sm:block text-4xl text-pink-300 font-light pb-8">:</div>' +
-        renderUnit(parts.seconds, 'Seconds')
-      );
-    }
-    function renderUnit(value, label) {
-      return '<div class="flex flex-col items-center mx-2 my-2">\
-        <div class="relative group">\
-          <div class="absolute inset-0 bg-pink-400 blur opacity-20 group-hover:opacity-40 transition-opacity duration-300 rounded-2xl"></div>\
-          <div class="relative bg-white/80 backdrop-blur-md w-20 h-24 sm:w-24 sm:h-32 rounded-2xl flex items-center justify-center shadow-xl border border-white/50 time-card">\
-            <span class="text-3xl sm:text-5xl font-bold text-gray-800 tabular-nums">'+ (value < 10 ? '0' + value : value) +'</span>\
-          </div>\
-        </div>\
-        <span class="mt-3 text-sm sm:text-base font-medium text-pink-900 tracking-wider uppercase">'+ label +'</span>\
-      </div>';
-    }
-
-    // start timer loop
-    var targetDate = getTargetDate();
-    function tick() {
-      var parts = timeLeftParts(targetDate);
-      renderTimeParts(parts);
-    }
-    tick();
-    var timerInterval = setInterval(tick, 1000);
-
-    // FLOATING HEARTS
-    var heartsContainer = document.getElementById('floating-hearts');
-    function createHearts(count) {
-      heartsContainer.innerHTML = '';
-      for (var i = 0; i < count; i++) {
-        var d = document.createElement('div');
-        d.className = 'absolute bottom-[-50px] text-pink-300 heart-bg';
-        var left = (Math.random() * 100).toFixed(2) + '%';
-        var duration = (6 + Math.random() * 10).toFixed(2) + 's';
-        var delay = (Math.random() * 5).toFixed(2) + 's';
-        var size = Math.round(10 + Math.random() * 20) + 'px';
-        var op = (0.3 + Math.random() * 0.4).toFixed(2);
-        d.style.left = left;
-        d.style.animationDuration = duration;
-        d.style.animationDelay = delay;
-        d.style.width = size;
-        d.style.height = size;
-        d.style.opacity = op;
-        d.innerHTML = ICONS.heart;
-        heartsContainer.appendChild(d);
+        return { days, hours, minutes, seconds };
       }
-    }
-    createHearts(15);
 
-    // accessibility: reduce motion respects
-    var media = window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (media && media.matches) {
-      // reduce animations
-      var heartEls = heartsContainer.querySelectorAll('.heart-bg');
-      heartEls.forEach(function (el) {
-        el.style.animationDuration = '1s';
-        el.style.opacity = '0.5';
+      function getTargetDate() {
+        return new Date(
+          TARGET.year,
+          TARGET.monthIndex,
+          TARGET.day,
+          TARGET.hour,
+          TARGET.minute,
+          0
+        );
+      }
+
+      const ICONS = {
+        heart: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`,
+
+        sparkles: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" 
+        stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912
+        a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12
+        l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>`,
+
+        edit2: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" 
+        stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
+        <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>`,
+
+        calendar: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" 
+        stroke="currentColor" stroke-width="1.6"viewBox="0 0 24 24">
+        <rect width="18" height="18" x="3" y="4" rx="2"/>
+        <line x1="16" x2="16" y1="2" y2="6"/>
+        <line x1="8" x2="8" y1="2" y2="6"/>
+        <line x1="3" x2="21" y1="10" y2="10"/></svg>`,
+
+        pin: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" 
+        stroke="currentColor" stroke-width="1.6"viewBox="0 0 24 24">
+        <path d="M12 21.7C17.3 17 22 13.5 22 10a7 7 0 1 0-14 0c0 
+        3.5 4.7 7 10 11.7z"/>
+        <circle cx="12" cy="10" r="3"/></svg>`,
+
+        check: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" 
+        stroke="currentColor" stroke-width="1.6"viewBox="0 0 24 24">
+        <polyline points="20 6 9 17 4 12"/></svg>`,
+      };
+
+      const app = document.getElementById("app");
+
+      app.innerHTML = `
+      <div class="relative w-full max-w-3xl flex flex-col items-center text-center p-6">
+        
+        <div id="sparkle-wrap" class="absolute inset-0 pointer-events-none z-30"></div>
+        <div id="floating-hearts" class="absolute inset-0 overflow-hidden pointer-events-none z-10"></div>
+
+        <div class="mb-6 space-y-4 w-full">
+          <div class="flex items-center justify-center gap-2 text-pink-600">
+            <span id="sparkles-left" class="w-5 h-5"></span>
+            <span class="text-xs sm:text-sm font-semibold tracking-[0.18em] uppercase">The Big Day Is Coming</span>
+            <span id="sparkles-right" class="w-5 h-5"></span>
+          </div>
+
+          <div class="relative inline-block">
+            <div id="name-view"></div>
+            <div id="name-edit" class="hidden"></div>
+          </div>
+
+          <div class="flex justify-center">
+            <div class="flex items-center gap-2 text-pink-800 bg-white/40 px-4 py-2 rounded-full 
+            backdrop-blur-md shadow-sm border border-white/40 font-semibold text-sm">
+              <span id="calendar-icon" class="w-4 h-4"></span>
+              <span>December 10, 2025 • 4:00 PM</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="timer-grid" class="flex flex-wrap justify-center items-center gap-2 sm:gap-4 mb-6"></div>
+
+        <div class="bg-white/40 backdrop-blur-md p-3 rounded-xl shadow-lg mb-8 w-full max-w-sm 
+        border border-white/60">
+          <h3 class="text-base font-bold text-pink-800 flex items-center justify-center gap-2 mb-2">
+            <span id="pin-icon" class="w-5 h-5"></span>Venue Details
+          </h3>
+          <p class="text-gray-700 font-medium text-base">Green Hills Resort</p>
+          <p class="text-sm text-gray-500 mt-1">Time: 4 PM - 6 PM</p>
+        </div>
+
+        <button id="footer-button" type="button"
+          class="bg-white/40 backdrop-blur-md px-6 py-3 rounded-full border border-white/60 shadow-lg 
+          transition-transform duration-200 font-medium inline-flex items-center gap-3 text-pink-800 
+          hover:scale-105">
+          <img id="avatar-left" class="w-10 h-10 rounded-full object-cover shadow-md border-2 border-pink-300"/>
+          <span class="text-sm">Countdown to Forever</span>
+          <img id="avatar-right" class="w-10 h-10 rounded-full object-cover shadow-md border-2 border-pink-300"/>
+        </button>
+
+      </div>`;
+
+      document.getElementById("sparkles-left").innerHTML = ICONS.sparkles;
+      document.getElementById("sparkles-right").innerHTML = ICONS.sparkles;
+      document.getElementById("calendar-icon").innerHTML = ICONS.calendar;
+      document.getElementById("pin-icon").innerHTML = ICONS.pin;
+
+      const avatarLeft = document.getElementById("avatar-left");
+      const avatarRight = document.getElementById("avatar-right");
+      const footerButton = document.getElementById("footer-button");
+
+      const PLACEHOLDER = "https://placehold.co/128x128/ff69b4/ffffff?text=♥";
+
+      avatarLeft.src = PLACEHOLDER;
+      avatarRight.src = PLACEHOLDER;
+
+      let imageExists = false;
+
+      const img = new Image();
+      img.onload = () => {
+        imageExists = true;
+        avatarLeft.src = UPLOADED_IMAGE_URL;
+        avatarRight.src = UPLOADED_IMAGE_URL;
+      };
+      img.onerror = () => (imageExists = false);
+      img.src = UPLOADED_IMAGE_URL;
+
+      footerButton.onclick = () =>
+        imageExists
+          ? window.open(UPLOADED_IMAGE_URL, "_blank", "noopener")
+          : alert("Image not available.");
+
+      const nameView = document.getElementById("name-view");
+      const nameEdit = document.getElementById("name-edit");
+
+      function createNameView(name) {
+        nameView.innerHTML = `
+        <h1 id="couple-title"
+          class="script-font text-3xl sm:text-5xl font-bold bg-clip-text 
+          text-transparent bg-gradient-to-r from-pink-600 to-purple-600 cursor-pointer 
+          flex items-center justify-center gap-2 py-2">
+          <span id="couple-names">${name}</span>
+          <span class="text-2xl sm:text-4xl text-pink-400 font-light">&amp;</span>
+          <span class="text-base sm:text-xl">Engaged</span>
+        </h1>`;
+        document.getElementById("couple-title").onclick = enterEditMode;
+      }
+
+      function createNameEdit(name) {
+        nameEdit.innerHTML = `
+        <div class="flex gap-2 bg-white/40 p-2 rounded-xl backdrop-blur-sm shadow-lg 
+        w-full max-w-md">
+          <input id="name-input" type="text"
+            class="flex-1 px-3 py-2 rounded-lg bg-white/80 border border-pink-200 
+            focus:ring-2 focus:ring-pink-400 text-gray-800 text-center text-sm"
+            placeholder="Enter Names (e.g. Rohan & Priya)" value="${name}"/>
+
+          <button id="save-name" class="p-2 bg-pink-500 text-white rounded-lg">
+            <span id="save-icon">${ICONS.check}</span>
+          </button>
+        </div>`;
+        document.getElementById("save-name").onclick = () => {
+          const val =
+            document.getElementById("name-input").value.trim() || "We";
+          localStorage.setItem("engagement_couple_name", val);
+          exitEditMode(val);
+        };
+      }
+
+      function enterEditMode() {
+        nameView.classList.add("hidden");
+        nameEdit.classList.remove("hidden");
+      }
+
+      function exitEditMode(name) {
+        nameEdit.classList.add("hidden");
+        nameView.classList.remove("hidden");
+        createNameView(name);
+      }
+
+      const savedName = localStorage.getItem("engagement_couple_name") || "We";
+      createNameEdit(savedName);
+      createNameView(savedName);
+
+      const timerGrid = document.getElementById("timer-grid");
+
+      function renderUnit(value, label) {
+        return `
+        <div class="flex flex-col items-center mx-2 my-2">
+          <div class="relative group">
+            <div class="absolute inset-0 bg-pink-400 blur opacity-20 rounded-2xl"></div>
+
+            <div class="relative bg-white/80 backdrop-blur-md w-20 h-24 sm:w-24 sm:h-32 
+            rounded-2xl flex items-center justify-center shadow-xl border border-white/50 time-card">
+              <span class="text-3xl sm:text-5xl font-bold text-gray-800">
+                ${value < 10 ? "0" + value : value}
+              </span>
+            </div>
+          </div>
+
+          <span class="mt-3 text-sm sm:text-base font-medium text-pink-900">
+            ${label}
+          </span>
+        </div>`;
+      }
+
+      function renderTimer() {
+        const parts = timeLeftParts(getTargetDate());
+        timerGrid.innerHTML =
+          renderUnit(parts.days, "Days") +
+          `<div class="hidden sm:block text-4xl text-pink-300 font-light pb-8">:</div>` +
+          renderUnit(parts.hours, "Hours") +
+          `<div class="hidden sm:block text-4xl text-pink-300 font-light pb-8">:</div>` +
+          renderUnit(parts.minutes, "Minutes") +
+          `<div class="hidden sm:block text-4xl text-pink-300 font-light pb-8">:</div>` +
+          renderUnit(parts.seconds, "Seconds");
+      }
+
+      renderTimer();
+      setInterval(renderTimer, 1000);
+
+      const heartsContainer = document.getElementById("floating-hearts");
+
+      function createHearts(count) {
+        heartsContainer.innerHTML = "";
+        for (let i = 0; i < count; i++) {
+          const d = document.createElement("div");
+          d.className = "absolute bottom-[-50px] text-pink-300 heart-bg";
+          d.style.left = Math.random() * 100 + "%";
+          d.style.animationDuration = 6 + Math.random() * 10 + "s";
+          d.style.animationDelay = Math.random() * 5 + "s";
+
+          const size = 10 + Math.random() * 20;
+          d.style.width = size + "px";
+          d.style.height = size + "px";
+          d.style.opacity = 0.3 + Math.random() * 0.4;
+
+          d.innerHTML = ICONS.heart;
+          heartsContainer.appendChild(d);
+        }
+      }
+
+      createHearts(14);
+
+      function spawnSparkles(n) {
+        const wrap = document.getElementById("sparkle-wrap");
+        wrap.innerHTML = "";
+
+        for (let i = 0; i < n; i++) {
+          const s = document.createElement("div");
+          s.className = "sparkle";
+
+          const size = 8 + Math.random() * 22;
+          s.style.width = size + "px";
+          s.style.height = size + "px";
+          s.style.left = 10 + Math.random() * 80 + "%";
+          s.style.top = 20 + Math.random() * 60 + "%";
+          s.style.opacity = "0";
+          s.innerHTML = ICONS.sparkles;
+
+          wrap.appendChild(s);
+
+          const duration = 800 + Math.random() * 900;
+          const tx = Math.random() * 80 - 40;
+          const ty = Math.random() * -120 - 20;
+
+          s.animate(
+            [
+              { transform: "translate(0,0) scale(0.6)", opacity: 0.9 },
+              { transform: `translate(${tx}px,${ty}px) scale(1.1)`, opacity: 0 },
+            ],
+            { duration, easing: "cubic-bezier(.2,.9,.2,1)" }
+          );
+
+          setTimeout(() => s.remove(), duration);
+        }
+      }
+
+      window.addEventListener("load", () => {
+        spawnSparkles(18);
+        setTimeout(() => spawnSparkles(8), 900);
       });
-    }
-
-    // Clean up if needed (no single page navigation here). If you add SPA behavior, clear intervals etc.
-    // window.onbeforeunload = function(){ clearInterval(timerInterval); };
-
-    // That is the minimal production-ready single-file approach.
-    // ---------- END ----------
-  })();
+    })();
   </script>
 </body>
 </html>
-
-i deployed this code in netlify and whenever the button is clicked its giving me a page not found error can u check it why
-ChatGPT said:
-
-Thought for 5s
-Nice build — looks great! 🎉 The “Page not found” is almost certainly coming from that footer link (the <a id="footer-link">) pointing at UPLOADED_IMAGE_URL which Netlify can’t find. In other words: clicking the link tries to open uploaded-1x.jpg (or whatever path you put there) and Netlify returns 404 because that file wasn’t published at that path.
-
-Below I explain why this happens and give you three safe fixes (quick fix, better UX, and recommended production approach) plus a short debug snippet you can drop into your deployed page to confirm the cause.
-
-Why this is happening (short)
-Your footer element is an anchor: <a id="footer-link" href="#" ...>.
-
-Later you set footerLink.href = UPLOADED_IMAGE_URL;.
-
-If UPLOADED_IMAGE_URL is a file that does not exist in your deployed site (for example uploaded-1x.jpg wasn’t added to the publish folder), the browser navigates to /uploaded-1x.jpg and Netlify serves 404.
-
-The save button (#save-name) itself doesn't trigger navigation, so the “Page not found” likely appears after you click the footer area (styled as a button) — users often call that a button because it looks like one.
-
-Quick debug you can run in the deployed site
-Open DevTools → Network, click the element that gives the 404 and watch which URL is requested. If you see GET /uploaded-1x.jpg 404 — bingo.
-
-You can also add this short console log to confirm the href being used:
-
-console.log('Footer href:', footerLink.href);
-footerLink.addEventListener('click', e => {
-  console.log('Clicked footer, href ->', footerLink.href);
-});
-Fix options
-Option A — Quick fix: point to a valid hosted image or placeholder
-If you only need a fast fix, set UPLOADED_IMAGE_URL to a real URL (Imgur, Cloudinary, or an absolute path on your site). Example:
-
-const UPLOADED_IMAGE_URL = 'https://placehold.co/128x128/ff69b4/ffffff?text=♥';
-This avoids Netlify 404 because the URL exists.
-
-Option B — Better UX: make it a safe button and open only when image exists
-Replace the anchor with a button (no navigation) and only open the image if it was successfully loaded. This prevents accidental nav to missing assets.
-
-Replace your footer anchor block in HTML (the app.innerHTML chunk) with this (keep styling classes):
-
-<button id="footer-link" type="button" class="bg-white/40 backdrop-blur-md px-8 py-4 rounded-full border border-white/60 shadow-lg transform transition-transform duration-300 font-medium inline-flex items-center gap-4 text-pink-800 cursor-pointer hover:scale-105 hover:shadow-xl">
-  <img id="avatar-left" src="" alt="Engagement Photo" class="w-8 h-8 rounded-full object-cover shadow-md border-2 border-pink-300" />
-  <span>Countdown to Forever</span>
-  <img id="avatar-right" src="" alt="Engagement Photo" class="w-8 h-8 rounded-full object-cover shadow-md border-2 border-pink-300" />
-</button>
-Then replace your existing setAvatar and footer link handling with this code:
-
-// state to know if image actually loaded
-var avatarLoaded = false;
-
-function preloadImage(url, onLoad, onError) {
-  var img = new Image();
-  img.onload = onLoad;
-  img.onerror = onError;
-  img.src = url;
-}
-
-// set avatars but only enable "open" if the image loaded
-function setAvatar(imgEl) {
-  // set a temporary placeholder until we confirm the real image exists
-  imgEl.src = "https://placehold.co/32x32/ff69b4/ffffff?text=%E2%99%A5";
-
-  preloadImage(UPLOADED_IMAGE_URL, function () {
-    // success: swap to real image
-    imgEl.src = UPLOADED_IMAGE_URL;
-    avatarLoaded = true;
-  }, function () {
-    // fail: keep placeholder, avatarLoaded remains false
-    avatarLoaded = false;
-  });
-}
-
-setAvatar(avatarLeft);
-setAvatar(avatarRight);
-
-// clicking the button opens image only if it exists
-document.getElementById('footer-link').addEventListener('click', function (e) {
-  if (!avatarLoaded) {
-    // optionally show a small toast / alert or do nothing
-    alert('Image not available. Upload the image to your site or set a valid URL.');
-    return;
-  }
-  // open in new tab safely
-  window.open(UPLOADED_IMAGE_URL, '_blank', 'noopener');
-});
-This prevents 404 navigation and is more robust.
-
-Option C — Production approach (recommended)
-Put the image file inside your repository in the folder that gets published (commonly public/ or the root of the static site). For a simple static site on Netlify, place uploaded-1x.jpg in your project root (or public/) so the final published URL /uploaded-1x.jpg exists.
-
-Commit & push → Netlify deploys automatically (if connected to Git).
-
-Or upload the file via Netlify's UI: Sites → Your site → Deploys → Drag & drop deploys (drop a zip with your build), or add the image to the repo and redeploy.
-
-Use absolute URLs for externally hosted images (CDN, Imgur, Cloudinary) if you prefer not to commit assets.
-
-Minimal code patch you can drop in right now
-If you want the simplest change (no file uploads), change the UPLOADED_IMAGE_URL line to a safe placeholder:
-
-const UPLOADED_IMAGE_URL = 'https://placehold.co/128x128/ff69b4/ffffff?text=♥';
-That will stop the 404 immediately.
-
-Summary checklist
- Check Network tab to confirm which URL returns 404.
-
- If file missing, upload the image to your published folder or use a hosted URL.
-
- Or change the anchor to a button and only open the image if it successfully preloads (recommended UX).
-
- Deploy again to Netlify after adding the asset.
-
-If you want, I can:
-
-provide the exact patched single-file HTML (with the button + preload logic) so you can copy/paste and redeploy, or
-
-tell you exactly where to put your image in a typical Netlify project layout (/public or /dist), or
-
-create a tiny upload-check helper that attempts a HEAD request first and disables the link if it 404s.
-
-Which would you like?
-
-You said:
-can u give me the correct code
-ChatGPT said:
-Absolutely — here's a corrected single-file HTML you can copy/paste and deploy to Netlify. I replaced the footer <a> with a safe <button>, added a robust image preload check so clicking won't navigate to a missing file, and kept the rest of your UI (timer, name edit, floating hearts) intact.
-
-Change the UPLOADED_IMAGE_URL constant to the actual URL or path of your uploaded image (if you place uploaded-1x.jpg in your published site root, keep 'uploaded-1x.jpg'). Deploy this and the 404 should stop.
-
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Our Engagement Countdown</title>
-  <meta name="description" content="Countdown to our engagement day" />
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:wght@300;400;600&display=swap');
-    body { font-family: 'Montserrat', sans-serif; }
-    .script-font { font-family: 'Dancing Script', cursive; }
-
-    @keyframes floatUp {
-      0% { transform: translateY(0) rotate(0deg); opacity: 0; }
-      10% { opacity: 0.6; }
-      100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
-    }
-    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    .animate-spin-slow { animation: spin 4s linear infinite; }
-    .heart-bg { animation-name: floatUp; animation-timing-function: linear; animation-iteration-count: infinite; }
-    .page-bg {
-      background: linear-gradient(135deg, #ffe7f0 0%, #ffdfe8 40%, #e6e6ff 100%);
-    }
-    .time-card { min-width: 5rem; }
-  </style>
-</head>
-<body class="min-h-screen overflow-hidden page-bg">
-  <div id="app" class="min-h-screen flex items-center justify-center p-4"></div>
-
-  <script>
-  (function () {
-    // --- CONFIG ---
-    // Set to your uploaded image path or an external URL.
-    // If you place uploaded-1x.jpg in your site's publish folder, you can keep 'uploaded-1x.jpg'.
-    const UPLOADED_IMAGE_URL = 'uploaded-1x.jpg'; // <<-- change this if needed
-
-    const TARGET = { year: 2025, monthIndex: 11, day: 10, hour: 16, minute: 0 }; // Dec 10, 2025 16:00 local
-
-    function pad(n){ return n < 10 ? '0' + n : String(n); }
-    function getTargetDate() { return new Date(TARGET.year, TARGET.monthIndex, TARGET.day, TARGET.hour, TARGET.minute, 0); }
-    function timeLeftParts(target) {
-      var diff = target - new Date();
-      if (diff <= 0) return { days:0, hours:0, minutes:0, seconds:0 };
-      var s = Math.floor(diff / 1000);
-      var days = Math.floor(s / (3600*24));
-      s -= days * 3600*24;
-      var hours = Math.floor(s / 3600);
-      s -= hours * 3600;
-      var minutes = Math.floor(s / 60);
-      var seconds = s - minutes * 60;
-      return { days: days, hours: hours, minutes: minutes, seconds: seconds };
-    }
-
-    var ICONS = {
-      heart: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>',
-      sparkles: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 3v4"/><path d="M3 9h4"/></svg>',
-      edit2: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>',
-      calendar: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>',
-      pin: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21.7C17.3 17 22 13.5 22 10a7 7 0 1 0-14 0c0 3.5 4.7 7 10 11.7z"/><circle cx="12" cy="10" r="3"/></svg>',
-      check: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>'
-    };
-
-    var app = document.getElementById('app');
-
-    app.innerHTML = '\
-      <div class="relative z-0 w-full max-w-4xl flex flex-col items-center text-center p-6">\
-        <div id="floating-hearts" class="absolute inset-0 overflow-hidden pointer-events-none z-10"></div>\
-        <div class="absolute top-0 right-0 w-64 h-64 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse pointer-events-none z-10"></div>\
-        <div class="absolute bottom-0 left-0 w-64 h-64 bg-pink-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse pointer-events-none z-10"></div>\
-        <div class="mb-8 space-y-4">\
-          <div class="flex items-center justify-center gap-2 text-pink-600 mb-2">\
-            <span id="sparkles-left" class="w-5 h-5"></span>\
-            <span class="text-sm font-semibold tracking-[0.2em] uppercase">The Big Day Is Coming</span>\
-            <span id="sparkles-right" class="w-5 h-5"></span>\
-          </div>\
-          <div class="group relative inline-block">\
-            <div id="name-view" class=""></div>\
-            <div id="name-edit" class="hidden"></div>\
-          </div>\
-          <div class="flex items-center justify-center gap-3">\
-            <div class="flex items-center justify-center gap-2 text-pink-800 bg-white/40 inline-block px-6 py-2 rounded-full backdrop-blur-md shadow-sm border border-white/40 font-semibold tracking-wide">\
-              <span id="calendar-icon" class="w-4 h-4"></span>\
-              <span>December 10, 2025 • 4:00 PM</span>\
-            </div>\
-          </div>\
-        </div>\
-        <div id="timer-grid" class="flex flex-wrap justify-center items-center gap-2 sm:gap-4 mb-8"></div>\
-        <div class="bg-white/40 backdrop-blur-md p-4 rounded-xl shadow-lg mb-12 w-full max-w-sm border border-white/60">\
-          <h3 class="text-lg font-bold text-pink-800 flex items-center justify-center gap-2 mb-2">\
-            <span id="pin-icon" class="w-5 h-5"></span>Venue Details\
-          </h3>\
-          <p class="text-gray-700 font-medium text-lg">Green Hills Resort</p>\
-          <p class="text-sm text-gray-500 mt-1">Time: 4 PM - 6 PM</p>\
-        </div>\
-        <!-- footer as a BUTTON to avoid accidental navigation to missing asset -->\
-        <button id="footer-button" type="button" class="bg-white/40 backdrop-blur-md px-8 py-4 rounded-full border border-white/60 shadow-lg transform transition-transform duration-300 font-medium inline-flex items-center gap-4 text-pink-800 cursor-pointer hover:scale-105 hover:shadow-xl">\
-          <img id="avatar-left" src=\"\" alt=\"Engagement Photo\" class=\"w-8 h-8 rounded-full object-cover shadow-md border-2 border-pink-300\" />\
-          <span>Countdown to Forever</span>\
-          <img id=\"avatar-right\" src=\"\" alt=\"Engagement Photo\" class=\"w-8 h-8 rounded-full object-cover shadow-md border-2 border-pink-300\" />\
-        </button>\
-      </div>';
-
-    // icons
-    document.getElementById('sparkles-left').innerHTML = ICONS.sparkles;
-    document.getElementById('sparkles-right').innerHTML = ICONS.sparkles;
-    document.getElementById('calendar-icon').innerHTML = ICONS.calendar;
-    document.getElementById('pin-icon').innerHTML = ICONS.pin;
-
-    // avatar handling with preload check
-    var avatarLeft = document.getElementById('avatar-left');
-    var avatarRight = document.getElementById('avatar-right');
-    var footerButton = document.getElementById('footer-button');
-
-    // placeholders
-    var PLACEHOLDER = "https://placehold.co/128x128/ff69b4/ffffff?text=%E2%99%A5";
-
-    // track whether image(s) loaded successfully
-    var imageExists = false;
-
-    function preloadImage(url) {
-      return new Promise(function (resolve, reject) {
-        var img = new Image();
-        img.onload = function () { resolve(true); };
-        img.onerror = function () { reject(false); };
-        img.src = url;
-      });
-    }
-
-    // set avatars using placeholder first, then replace if real image exists
-    avatarLeft.src = PLACEHOLDER;
-    avatarRight.src = PLACEHOLDER;
-
-    // Try preload; if succeeds, update both avatars and enable open; otherwise keep placeholder & disable open
-    preloadImage(UPLOADED_IMAGE_URL).then(function () {
-      imageExists = true;
-      avatarLeft.src = UPLOADED_IMAGE_URL;
-      avatarRight.src = UPLOADED_IMAGE_URL;
-      // update alt attributes for clarity
-      avatarLeft.alt = "Engagement Photo (uploaded)";
-      avatarRight.alt = "Engagement Photo (uploaded)";
-    }).catch(function () {
-      imageExists = false;
-      // keep placeholders; optionally console message (not required)
-      // console.warn('Uploaded image not found at', UPLOADED_IMAGE_URL);
-    });
-
-    // clicking the footer button opens the image only if it exists
-    footerButton.addEventListener('click', function () {
-      if (!imageExists) {
-        // friendly feedback instead of navigation to a 404
-        // you can replace with a nicer toast UI if desired
-        alert('Image not available. Please upload the image to your published folder or set a valid URL in UPLOADED_IMAGE_URL.');
-        return;
-      }
-      // open in new tab safely
-      window.open(UPLOADED_IMAGE_URL, '_blank', 'noopener');
-    });
-
-    // name edit/view logic
-    var nameView = document.getElementById('name-view');
-    var nameEdit = document.getElementById('name-edit');
-
-    function createNameView(name) {
-      nameView.innerHTML = '<h1 id="couple-title" class="script-font text-5xl sm:text-7xl md:text-8xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-600 to-purple-600 cursor-pointer hover:opacity-80 transition-opacity flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 py-2" title="Click to edit names">\
-        <span id="couple-names"></span>\
-        <span class="text-4xl sm:text-6xl text-pink-400 font-sans font-light">&amp;</span>\
-        <span>Engaged</span>\
-        <span id="edit-icon" class="hidden sm:block w-5 h-5 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity absolute -right-8 top-1/2 -translate-y-1/2"></span>\
-      </h1>';
-      document.getElementById('couple-names').textContent = name;
-      document.getElementById('edit-icon').innerHTML = ICONS.edit2;
-      document.getElementById('couple-title').addEventListener('click', function () {
-        enterEditMode();
-      });
-    }
-
-    function createNameEdit(name) {
-      nameEdit.innerHTML = '<div class="flex flex-col sm:flex-row items-center gap-2 bg-white/40 p-2 rounded-xl backdrop-blur-sm shadow-lg">\
-        <input id="name-input" type="text" class="px-4 py-2 rounded-lg bg-white/80 border border-pink-200 focus:outline-none focus:ring-2 focus:ring-pink-400 text-gray-800 text-center" placeholder="Enter Names (e.g. Rohan & Priya)"/>\
-        <button id="save-name" class="p-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors" aria-label="Save name">\
-          <span id="save-icon"></span>\
-        </button>\
-      </div>';
-      document.getElementById('name-input').value = name || '';
-      document.getElementById('save-icon').innerHTML = ICONS.check;
-      document.getElementById('save-name').addEventListener('click', function () {
-        var val = document.getElementById('name-input').value.trim() || 'We';
-        localStorage.setItem('engagement_couple_name', val);
-        exitEditMode(val);
-      });
-    }
-
-    function enterEditMode() {
-      nameView.classList.add('hidden');
-      nameEdit.classList.remove('hidden');
-      document.getElementById('name-input').focus();
-    }
-    function exitEditMode(name) {
-      nameEdit.classList.add('hidden');
-      nameView.classList.remove('hidden');
-      createNameView(name);
-    }
-
-    var savedName = localStorage.getItem('engagement_couple_name') || 'We';
-    createNameEdit(savedName);
-    createNameView(savedName);
-
-    // TIMER UI
-    var timerGrid = document.getElementById('timer-grid');
-    function renderTimeParts(parts) {
-      timerGrid.innerHTML = (
-        renderUnit(parts.days, 'Days') +
-        '<div class="hidden sm:block text-4xl text-pink-300 font-light pb-8">:</div>' +
-        renderUnit(parts.hours, 'Hours') +
-        '<div class="hidden sm:block text-4xl text-pink-300 font-light pb-8">:</div>' +
-        renderUnit(parts.minutes, 'Minutes') +
-        '<div class="hidden sm:block text-4xl text-pink-300 font-light pb-8">:</div>' +
-        renderUnit(parts.seconds, 'Seconds')
-      );
-    }
-    function renderUnit(value, label) {
-      return '<div class="flex flex-col items-center mx-2 my-2">\
-        <div class="relative group">\
-          <div class="absolute inset-0 bg-pink-400 blur opacity-20 group-hover:opacity-40 transition-opacity duration-300 rounded-2xl"></div>\
-          <div class="relative bg-white/80 backdrop-blur-md w-20 h-24 sm:w-24 sm:h-32 rounded-2xl flex items-center justify-center shadow-xl border border-white/50 time-card">\
-            <span class="text-3xl sm:text-5xl font-bold text-gray-800 tabular-nums">'+ (value < 10 ? '0' + value : value) +'</span>\
-          </div>\
-        </div>\
-        <span class="mt-3 text-sm sm:text-base font-medium text-pink-900 tracking-wider uppercase">'+ label +'</span>\
-      </div>';
-    }
-
-    var targetDate = getTargetDate();
-    function tick() {
-      var parts = timeLeftParts(targetDate);
-      renderTimeParts(parts);
-    }
-    tick();
-    var timerInterval = setInterval(tick, 1000);
-
-    // Floating hearts
-    var heartsContainer = document.getElementById('floating-hearts');
-    function createHearts(count) {
-      heartsContainer.innerHTML = '';
-      for (var i = 0; i < count; i++) {
-        var d = document.createElement('div');
-        d.className = 'absolute bottom-[-50px] text-pink-300 heart-bg';
-        var left = (Math.random() * 100).toFixed(2) + '%';
-        var duration = (6 + Math.random() * 10).toFixed(2) + 's';
-        var delay = (Math.random() * 5).toFixed(2) + 's';
-        var size = Math.round(10 + Math.random() * 20) + 'px';
-        var op = (0.3 + Math.random() * 0.4).toFixed(2);
-        d.style.left = left;
-        d.style.animationDuration = duration;
-        d.style.animationDelay = delay;
-        d.style.width = size;
-        d.style.height = size;
-        d.style.opacity = op;
-        d.innerHTML = ICONS.heart;
-        heartsContainer.appendChild(d);
-      }
-    }
-    createHearts(15);
-
-    var media = window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (media && media.matches) {
-      var heartEls = heartsContainer.querySelectorAll('.heart-bg');
-      heartEls.forEach(function (el) {
-        el.style.animationDuration = '1s';
-        el.style.opacity = '0.5';
-      });
-    }
-
-    // cleanup note (if you later add SPA behavior, clear intervals etc.)
-    // window.onbeforeunload = function(){ clearInterval(timerInterval); };
-
-  })();
-  </script>
-</body>
-</html>
-One final note: if you keep UPLOADED_IMAGE_URL = 'uploaded-1x.jpg', make sure that file actually exists in your published site root (or public/ depending on your build). If you prefer I can also give you the exact git repo layout commands or the Netlify UI steps to upload the file — I included an alert so users won’t be taken to a 404 anymore.
-
-
-
-
-No file chosenNo file chosen
-ChatGPT can make mistakes. Check important info. See Cookie Preferences.
