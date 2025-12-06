@@ -60,6 +60,9 @@
 
     <script type="text/babel">
         const { useState, useEffect } = React;
+        
+        // --- CONSTANT FOR UPLOADED IMAGE ---
+        const UPLOADED_IMAGE_URL = 'uploaded:1x.jpg';
 
         // Icons Components (Inline SVGs)
         const Heart = ({ className }) => (
@@ -112,7 +115,8 @@
             
             // State for Image and Redirection Link functionality
             const [backgroundImageUrl, setBackgroundImageUrl] = useState('');
-            const [linkUrl, setLinkUrl] = useState('#'); // New: URL for the main footer link
+            // FIX: Set the default link URL to the uploaded image so it redirects to it by default.
+            const [linkUrl, setLinkUrl] = useState(UPLOADED_IMAGE_URL); 
             const [isSettingsModalVisible, setIsSettingsModalVisible] = useState(false); // Renamed state
             const [tempImageUrl, setTempImageUrl] = useState('');
             const [tempLinkUrl, setTempLinkUrl] = useState(''); // New: Temp state for link URL input
@@ -142,14 +146,15 @@
                 setIsSettingsModalVisible(!isSettingsModalVisible);
                 // Pre-fill inputs with current saved values
                 setTempImageUrl(backgroundImageUrl); 
-                setTempLinkUrl(linkUrl === '#' ? '' : linkUrl); // Don't show '#' if no link is set
+                // FIX: If the current link is the uploaded image URL or '#', show an empty input for a cleaner user experience.
+                setTempLinkUrl(linkUrl === UPLOADED_IMAGE_URL || linkUrl === '#' ? '' : linkUrl);
             };
 
             // Function to save the new settings
             const handleSaveSettings = () => {
                 setBackgroundImageUrl(tempImageUrl);
-                // If tempLinkUrl is empty, default to '#' to prevent breaking navigation
-                setLinkUrl(tempLinkUrl || '#'); 
+                // If tempLinkUrl is empty, default back to the uploaded image URL
+                setLinkUrl(tempLinkUrl || UPLOADED_IMAGE_URL); 
                 setIsSettingsModalVisible(false);
             };
 
@@ -296,21 +301,39 @@
                             <TimeUnit value={timeLeft.seconds} label="Seconds" />
                         </div>
 
-                        {/* Footer Link (Now an anchor tag for redirection) */}
+                        {/* Footer Link (Now an anchor tag for redirection, with image) */}
                         <a 
                             href={linkUrl}
                             target="_blank" 
                             rel="noopener noreferrer"
                             className={`
                                 bg-white/40 backdrop-blur-md px-8 py-4 rounded-full border border-white/60 shadow-lg transform transition-transform duration-300 
-                                font-medium inline-flex items-center gap-2 text-pink-800 cursor-pointer
-                                ${linkUrl !== '#' && 'hover:scale-105 hover:shadow-xl'}
+                                font-medium inline-flex items-center gap-4 text-pink-800 cursor-pointer
+                                ${linkUrl !== UPLOADED_IMAGE_URL && linkUrl !== '#' && 'hover:scale-105 hover:shadow-xl'}
                             `}
-                            title={linkUrl !== '#' ? `Click to go to ${linkUrl}` : "Set a link in the Settings menu (gear icon)."}
+                            // Updated title based on the link
+                            title={linkUrl !== UPLOADED_IMAGE_URL && linkUrl !== '#' ? `Click to go to ${linkUrl}` : "Click to view your image."}
                         >
-                            <Heart className="w-5 h-5 text-red-500 fill-current animate-pulse" />
+                            {/* New Image element */}
+                            <img 
+                                src={UPLOADED_IMAGE_URL} 
+                                alt="Engagement Photo" 
+                                // FIX: Removed animate-pulse class
+                                className="w-8 h-8 rounded-full object-cover shadow-md border-2 border-pink-300"
+                                // Fallback image if the URL fails to load
+                                onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/32x32/ff69b4/ffffff?text=%E2%99%A5"; }}
+                            />
+                            
                             <span>Countdown to Forever</span>
-                            <Heart className="w-5 h-5 text-red-500 fill-current animate-pulse" />
+
+                            <img 
+                                src={UPLOADED_IMAGE_URL} 
+                                alt="Engagement Photo" 
+                                // FIX: Removed animate-pulse class
+                                className="w-8 h-8 rounded-full object-cover shadow-md border-2 border-pink-300"
+                                // Fallback image if the URL fails to load
+                                onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/32x32/ff69b4/ffffff?text=%E2%99%A5"; }}
+                            />
                         </a>
                         
                         {/* Settings Modal (Handles both Link URL and Background Image URL) */}
@@ -328,7 +351,7 @@
                                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                                             Redirection Link
                                         </h3>
-                                        <p className="text-sm text-gray-600 mb-2">Where should "Countdown to Forever" link go? (e.g., your wedding website, registry, etc.)</p>
+                                        <p className="text-sm text-gray-600 mb-2">Where should "Countdown to Forever" link go? (e.g., your wedding website, registry, etc.) Leave blank to link to your uploaded photo.</p>
                                         <input
                                             type="url"
                                             value={tempLinkUrl}
