@@ -1,94 +1,93 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#ffe4e6" />
 
-    <title>Gaurav & Monalisha | Save the Date</title>
-    <meta name="description" content="Join us as we count down to our engagement. December 10, 2025."/>
-    <meta property="og:title" content="Gaurav & Monalisha are getting engaged!"/>
-    <meta property="og:description" content="December 10, 2025 • Green Hills Resort"/>
-    <meta property="og:image" content="https://placehold.co/600x400/ff69b4/ffffff?text=Save+The+Date"/>
-    <meta property="og:type" content="website"/>
+  <title>Gaurav & Monalisha | Save the Date</title>
+  <meta name="description" content="Join us as we count down to our engagement. December 10, 2025." />
+  <meta property="og:title" content="Gaurav & Monalisha are getting engaged!" />
+  <meta property="og:description" content="December 10, 2025 • Green Hills Resort" />
+  <meta property="og:image" content="https://placehold.co/600x400/ff69b4/ffffff?text=Save+The+Date" />
+  <meta property="og:type" content="website" />
 
-    <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tailwind (CDN for quick deployment) -->
+  <script src="https://cdn.tailwindcss.com" defer></script>
 
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:wght@300;400;600&display=swap');
+  <!-- Use link-fonts (preconnect + stylesheet) rather than @import for better performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
 
-        :root {
-          --primary-color: #db2777; /* pink-600 */
-        }
+  <style>
+    :root { --primary-color: #db2777; }
 
-        body { font-family: 'Montserrat', sans-serif; }
-        .script-font { font-family: 'Dancing Script', cursive; }
+    /* Typography (clamped sizes for responsive scaling) */
+    body { font-family: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
+    .script-font { font-family: 'Dancing Script', cursive; }
 
-        /* Animations */
-        @keyframes floatUp {
-          0% { transform: translateY(0) rotate(0deg); opacity: 0; }
-          10% { opacity: 0.6; }
-          100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
-        }
+    /* Animations */
+    @keyframes floatUp {
+      0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+      10% { opacity: 0.6; }
+      100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
+    }
 
-        .heart-bg {
-          animation-name: floatUp;
-          animation-timing-function: linear;
-          animation-iteration-count: infinite;
-        }
+    .heart-bg { animation-name: floatUp; animation-timing-function: linear; animation-iteration-count: infinite; }
 
-        .page-bg {
-          background: linear-gradient(135deg, #fff0f5 0%, #ffe4e6 50%, #e0e7ff 100%);
-        }
+    .page-bg { background: linear-gradient(135deg, #fff0f5 0%, #ffe4e6 50%, #e0e7ff 100%); }
 
-        .time-card { min-width: 4.5rem; }
-        @media (min-width: 640px) { .time-card { min-width: 6rem; } }
-    </style>
+    /* Responsive time card width */
+    .time-card { min-width: 4.5rem; }
+    @media (min-width: 640px) { .time-card { min-width: 6rem; } }
+
+    /* Make big headings scale smoothly across sizes */
+    .hero-name { font-size: clamp(2.2rem, 6vw, 5rem); }
+    .hero-amp { font-size: clamp(1.2rem, 3.5vw, 2.2rem); }
+
+    /* Respect reduced-motion user preference */
+    @media (prefers-reduced-motion: reduce) {
+      .heart-bg { animation: none !important; }
+      .animate-pulse { animation: none !important; }
+    }
+
+    /* Accessibility helpers */
+    .visually-hidden { position: absolute !important; height: 1px; width: 1px; overflow: hidden; clip: rect(1px, 1px, 1px, 1px); white-space: nowrap; }
+  </style>
 </head>
-<body class="min-h-screen overflow-hidden page-bg selection:bg-pink-200 selection:text-pink-900">
+<body class="min-h-screen page-bg selection:bg-pink-200 selection:text-pink-900">
 
-<div id="app" class="min-h-screen flex items-center justify-center p-4 relative">
-</div>
+  <main id="app" class="min-h-screen flex items-center justify-center p-4 relative">
+    <!-- content injected by script -->
+  </main>
 
-<script>
+  <script>
     (function () {
-      /** * --- CONFIGURATION ---
-       * Edit these values to customize the page
-       */
+      // --- CONFIG (edit values only here for content changes) ---
       const CONFIG = {
-        names: {
-          partner1: "Gaurav",
-          partner2: "Monalisha"
-        },
-        date: {
-          year: 2025,
-          monthIndex: 11, // 0 = Jan, 11 = Dec
-          day: 10,
-          hour: 16, // 24-hour format (16:00 = 4 PM)
-          minute: 0
-        },
-        venue: {
-          name: "Green Hills Resort",
-          timeString: "4:00 PM - 6:00 PM"
-        },
-        // URL for the footer photo (leave empty for placeholder)
-        photoUrl: "image.jpg"
+        names: { partner1: "Gaurav", partner2: "Monalisha" },
+        date: { year: 2025, monthIndex: 11, day: 10, hour: 16, minute: 0 }, // monthIndex: 0 = Jan
+        venue: { name: "Green Hills Resort", timeString: "4:00 PM - 6:00 PM" },
+        // set this to an absolute URL (https...) or leave empty to use placeholder
+        photoUrl: "",
       };
 
-      // --- LOGIC ---
-
+      // --- ICONS ---
       const ICONS = {
-        heart: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-full h-full"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>',
-        sparkles: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 3v4"/><path d="M3 9h4"/></svg>',
-        calendar: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>',
-        pin: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21.7C17.3 17 22 13.5 22 10a7 7 0 1 0-14 0c0 3.5 4.7 7 10 11.7z"/><circle cx="12" cy="10" r="3"/></svg>'
+        heart: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-full h-full" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>',
+        sparkles: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full" aria-hidden="true"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>',
+        calendar: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full" aria-hidden="true"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>',
+        pin: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full" aria-hidden="true"><path d="M12 21.7C17.3 17 22 13.5 22 10a7 7 0 1 0-14 0c0 3.5 4.7 7 10 11.7z"/><circle cx="12" cy="10" r="3"/></svg>'
       };
 
+      // --- Utils ---
       function getTargetDate() {
         return new Date(CONFIG.date.year, CONFIG.date.monthIndex, CONFIG.date.day, CONFIG.date.hour, CONFIG.date.minute, 0);
       }
 
       function calculateTimeLeft(target) {
-        const diff = target - new Date();
+        const diff = Math.max(0, target - new Date());
         if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0 };
 
         let s = Math.floor(diff / 1000);
@@ -97,87 +96,71 @@
         const hours = Math.floor(s / 3600);
         s -= hours * 3600;
         const minutes = Math.floor(s / 60);
-        const seconds = s - minutes * 60;
+        s -= minutes * 60;
+        const seconds = s;
 
         return { days, hours, minutes, seconds };
       }
 
-      // --- RENDER ---
+      // --- Render ---
       const app = document.getElementById('app');
 
-      // Main Layout
-      app.innerHTML = `
+      function buildLayout() {
+        const dateLabel = new Date(CONFIG.date.year, CONFIG.date.monthIndex, CONFIG.date.day).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+        const photo = CONFIG.photoUrl && CONFIG.photoUrl.trim() ? CONFIG.photoUrl.trim() : '';
+
+        app.innerHTML = `
         <div class="relative z-0 w-full max-w-5xl flex flex-col items-center text-center p-6">
           <div id="floating-hearts" class="absolute inset-0 overflow-hidden pointer-events-none z-0"></div>
-          <div class="absolute top-0 right-0 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse pointer-events-none"></div>
-          <div class="absolute bottom-0 left-0 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse pointer-events-none"></div>
 
-          <div class="mb-10 space-y-6 relative z-10">
+          <div class="mb-8 space-y-6 relative z-10">
             <div class="flex items-center justify-center gap-3 text-pink-600 mb-2">
-              <span class="w-5 h-5 animate-pulse">${ICONS.sparkles}</span>
+              <span class="w-5 h-5">${ICONS.sparkles}</span>
               <span class="text-sm font-semibold tracking-[0.2em] uppercase">The Big Day Is Coming</span>
-              <span class="w-5 h-5 animate-pulse">${ICONS.sparkles}</span>
+              <span class="w-5 h-5">${ICONS.sparkles}</span>
             </div>
 
             <h1 class="script-font font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-600 to-purple-600 drop-shadow-sm flex flex-col md:flex-row items-center justify-center gap-2 md:gap-6 py-2 leading-tight">
-              <span class="text-5xl sm:text-7xl md:text-8xl">${CONFIG.names.partner1}</span>
-              <span class="text-4xl sm:text-6xl text-pink-400 font-sans font-light opacity-80">&amp;</span>
-              <span class="text-5xl sm:text-7xl md:text-8xl">${CONFIG.names.partner2}</span>
+              <span class="hero-name">${escapeHtml(CONFIG.names.partner1)}</span>
+              <span class="hero-amp text-pink-400 font-sans font-light opacity-80">&amp;</span>
+              <span class="hero-name">${escapeHtml(CONFIG.names.partner2)}</span>
             </h1>
 
             <div class="flex items-center justify-center">
               <div class="flex items-center gap-2 text-pink-900 bg-white/60 px-6 py-2 rounded-full backdrop-blur-md shadow-sm border border-white/50 font-semibold tracking-wide text-sm sm:text-base">
                 <span class="w-4 h-4 text-pink-600">${ICONS.calendar}</span>
-                <span>December 10, 2025</span>
+                <span>${dateLabel}</span>
               </div>
             </div>
           </div>
 
-          <div id="timer-grid" class="flex flex-wrap justify-center items-center gap-2 sm:gap-4 mb-10 z-10"></div>
+          <div id="timer-grid" class="flex flex-wrap justify-center items-center gap-2 sm:gap-4 mb-8 z-10" role="timer" aria-live="polite"></div>
 
-          <a href="https://maps.app.goo.gl/DTUvG8m3VmVxwbmZ6" target="_blank">
-              <div class="bg-white/50 backdrop-blur-md p-6 rounded-2xl shadow-xl mb-12 w-full max-w-sm border border-white/60 z-10 transform hover:scale-105 transition-transform duration-300">
-            <h3 class="text-lg font-bold text-pink-800 flex items-center justify-center gap-2 mb-2">
-              <span class="w-5 h-5">${ICONS.pin}</span> Venue Details
-            </h3>
-            <p class="text-gray-800 font-bold text-xl">${CONFIG.venue.name}</p>
-            <p class="text-sm text-gray-600 mt-1 font-medium">${CONFIG.venue.timeString}</p>
-          </div>
+          <a href="https://maps.app.goo.gl/DTUvG8m3VmVxwbmZ6" target="_blank" rel="noopener noreferrer" class="z-10">
+            <div class="bg-white/50 backdrop-blur-md p-6 rounded-2xl shadow-xl mb-6 w-full max-w-sm border border-white/60 transform hover:scale-105 transition-transform duration-300">
+              <h3 class="text-lg font-bold text-pink-800 flex items-center justify-center gap-2 mb-2"><span class="w-5 h-5">${ICONS.pin}</span> Venue Details</h3>
+              <p class="text-gray-800 font-bold text-xl">${escapeHtml(CONFIG.venue.name)}</p>
+              <p class="text-sm text-gray-600 mt-1 font-medium">${escapeHtml(CONFIG.venue.timeString)}</p>
+            </div>
           </a>
 
-          <a id="footer-link" href="${CONFIG.photoUrl}" target="_blank" rel="noopener noreferrer"
-             class="group relative z-10 bg-white/60 backdrop-blur-md px-8 py-3 rounded-full border border-white/60 shadow-lg
-                    flex items-center gap-4 text-pink-900 font-semibold cursor-pointer transition-all hover:shadow-2xl hover:bg-white/80">
-            <img id="avatar-left" class="w-10 h-10 rounded-full object-cover shadow-md border-2 border-pink-300" alt="Couple" />
+          <a id="footer-link" href="${photo || 'javascript:void(0)'}" target="_blank" rel="noopener noreferrer" aria-label="Open couple photo" class="group relative z-10 bg-white/60 backdrop-blur-md px-6 py-3 rounded-full border border-white/60 shadow-lg flex items-center gap-4 text-pink-900 font-semibold cursor-pointer transition-all hover:shadow-2xl hover:bg-white/80">
+            <img id="avatar-left" class="w-10 h-10 rounded-full object-cover shadow-md border-2 border-pink-300" alt="Partner 1 photo" loading="lazy" />
             <span class="group-hover:tracking-wider transition-all duration-300">Countdown to Forever</span>
-            <img id="avatar-right" class="w-10 h-10 rounded-full object-cover shadow-md border-2 border-pink-300" alt="Couple" />
+            <img id="avatar-right" class="w-10 h-10 rounded-full object-cover shadow-md border-2 border-pink-300" alt="Partner 2 photo" loading="lazy" />
           </a>
-          </br>
-          </br>
-          </br>
-          </br>
-          </br>
+
         </div>
-      `;
-
-      // --- IMAGES ---
-      const placeholder = "https://placehold.co/100x100/ff69b4/ffffff?text=%E2%99%A5";
-      const leftAvatar = document.getElementById('avatar-left');
-      const rightAvatar = document.getElementById('avatar-right');
-
-      // Attempt to load user image, fall back to placeholder if missing/error
-      function setAvatar(img) {
-        img.src = CONFIG.photoUrl;
-        img.onerror = () => { img.src = placeholder; };
+        `;
       }
-      setAvatar(leftAvatar);
-      setAvatar(rightAvatar);
 
-      // --- TIMER LOGIC ---
-      const timerGrid = document.getElementById('timer-grid');
+      // small HTML escape helper for names and other user-provided content
+      function escapeHtml(s) { return String(s).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
 
+      // timer rendering helpers
+      const timerGridId = 'timer-grid';
       function renderUnit(value, label) {
-        const formatted = value < 10 ? '0' + value : value;
+        const formatted = String(value).padStart(2, '0');
         return `
           <div class="flex flex-col items-center mx-1 sm:mx-2">
             <div class="relative group">
@@ -191,41 +174,49 @@
         `;
       }
 
-      function renderSeparator() {
-        return `<div class="text-2xl sm:text-4xl text-pink-300 font-light pb-6 sm:pb-8 animate-pulse">:</div>`;
+      function renderSeparator() { return `<div class="text-2xl sm:text-4xl text-pink-300 font-light pb-6 sm:pb-8">:</div>`; }
+
+      // set avatars with fallback placeholder
+      function setAvatarImages(photoUrl) {
+        const placeholder = 'https://placehold.co/100x100/ff69b4/ffffff?text=%E2%99%A5';
+        const left = document.getElementById('avatar-left');
+        const right = document.getElementById('avatar-right');
+        const src = photoUrl && photoUrl.trim() ? photoUrl.trim() : placeholder;
+        [left, right].forEach(img => {
+          img.src = src;
+          img.onerror = () => { img.src = placeholder; };
+        });
       }
 
-      const targetDate = getTargetDate();
-
-      function updateTimer() {
-        const t = calculateTimeLeft(targetDate);
-        timerGrid.innerHTML =
-          renderUnit(t.days, 'Days') + renderSeparator() +
-          renderUnit(t.hours, 'Hours') + renderSeparator() +
-          renderUnit(t.minutes, 'Mins') + renderSeparator() +
-          renderUnit(t.seconds, 'Secs');
+      // main timer loop (uses setInterval but keeps work small)
+      let timerInterval;
+      function startTimer() {
+        const target = getTargetDate();
+        const timerGrid = document.getElementById(timerGridId);
+        function update() {
+          const t = calculateTimeLeft(target);
+          if (!timerGrid) return;
+          timerGrid.innerHTML = renderUnit(t.days, 'Days') + renderSeparator() + renderUnit(t.hours, 'Hours') + renderSeparator() + renderUnit(t.minutes, 'Mins') + renderSeparator() + renderUnit(t.seconds, 'Secs');
+        }
+        update();
+        timerInterval = setInterval(update, 1000);
       }
 
-      // Start Timer
-      updateTimer();
-      setInterval(updateTimer, 1000);
-
-      // --- ANIMATIONS (Hearts) ---
-      const heartsContainer = document.getElementById('floating-hearts');
-
+      // floating hearts (reduced on small screens for performance)
       function initHearts() {
-        const count = 15; // Number of floating hearts
+        const heartsContainer = document.getElementById('floating-hearts');
+        if (!heartsContainer) return;
+        const count = window.innerWidth < 640 ? 6 : 15;
         for (let i = 0; i < count; i++) {
           const d = document.createElement('div');
           d.className = 'absolute bottom-[-50px] text-pink-300 heart-bg';
           d.innerHTML = ICONS.heart;
 
-          // Randomize animation properties
           const left = Math.random() * 100 + '%';
           const duration = (6 + Math.random() * 10) + 's';
           const delay = (Math.random() * 5) + 's';
-          const size = (15 + Math.random() * 25) + 'px';
-          const opacity = (0.2 + Math.random() * 0.5);
+          const size = (12 + Math.random() * 28) + 'px';
+          const opacity = (0.15 + Math.random() * 0.6);
 
           d.style.left = left;
           d.style.width = size;
@@ -238,13 +229,22 @@
         }
       }
 
-      // Respect reduced motion
-      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (!prefersReducedMotion) {
-        initHearts();
-      }
+      // Respect reduced-motion preference
+      const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      // Build & start
+      buildLayout();
+      setAvatarImages(CONFIG.photoUrl);
+      startTimer();
+      if (!prefersReducedMotion) initHearts();
+
+      // Tidy up on unload
+      window.addEventListener('beforeunload', () => { clearInterval(timerInterval); });
+
+      // Expose for debug if needed (production: remove or gate behind debug flag)
+      window._saveTheDate = { CONFIG };
 
     })();
-</script>
+  </script>
 </body>
 </html>
